@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import DashBoard from './Pages/DashBoard';
-import Note from './Pages/Note';
+import Notes from './Pages/Notes';
 
 function App() {
 
@@ -11,7 +11,7 @@ function App() {
       <Router>
         <Routes>
           <Route path="/" element={<DashBoard />}/>
-          <Route path="/Note" element={<Note />} />
+          <Route path="/Notes" element={<Notes />} />
         </Routes>
       </Router>
     </>
