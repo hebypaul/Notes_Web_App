@@ -8,7 +8,7 @@ function App() {
 
   return (
     <>
-      <Router>
+      <Router  >
         <Routes>
           <Route path="/" element={<DashBoard />}/>
           <Route path="/Notes" element={<Notes />} />
