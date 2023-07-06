@@ -6,7 +6,6 @@ import Note from './Pages/Note';
 
 function App() {
 
-
   return (
     <>
       <Router  >
