@@ -1,123 +1,122 @@
 import {useState }from "react";
 import Layout from "../Components/Layout/Layout";
-const initialColumns = [
-    { id: 1, title: 'To Do' },
-    { id: 2, title: 'In Progress' },
-    { id: 3, title: 'Code Review' },
-    { id: 4, title: 'Done' },
-    { id: 5, title: 'Archive' }
-  ];
-  
-  const initialTasks = [
-    { id: 1, title: 'Task 1', columnId: 1 },
-    { id: 2, title: 'Task 2', columnId: 1 },
-    { id: 3, title: 'Task 3', columnId: 2 },
-  ];
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+
+const data = [
+  { id: 'task-1', content: 'Task 1' },
+  { id: 'task-2', content: 'Task 2' },
+  { id: 'task-3', content: 'Task 3' },
+  { id: 'task-4', content: 'Task 4' },
+];
+
+const columnsData = {
+  'column-1': {
+    id: 'column-1',
+    title: 'To Do',
+    tasks: [data[0], data[1]],
+  },
+  'column-2': {
+    id: 'column-2',
+    title: 'In Progress',
+    tasks: [data[2]],
+  },
+  'column-3': {
+    id: 'column-3',
+    title: 'Done',
+    tasks: [data[3]],
+  },
+};
 
 const Project = () => {
-    const [columns, setColumns] = useState(initialColumns);
-    const [tasks, setTasks] = useState(initialTasks);
-    const [newColumnTitle, setNewColumnTitle] = useState('');
-    const [newTaskTitle, setNewTaskTitle] = useState('');
-    const [newTaskColumnId, setNewTaskColumnId] = useState(1);
+    const [columns, setColumns] = useState(columnsData);
+
+    const onDragEnd = (result) => {
+      const { destination, source, draggableId } = result;
   
-    const handleAddColumn = () => {
-      if (!newColumnTitle) return;
-      setColumns((prevColumns) => [
-        ...prevColumns,
-        { id: prevColumns.length + 1, title: newColumnTitle }
-      ]);
-      setNewColumnTitle('');
+      if (!destination) return;
+  
+      if (
+        destination.droppableId === source.droppableId &&
+        destination.index === source.index
+      )
+        return;
+  
+      const startColumn = columns[source.droppableId];
+      const endColumn = columns[destination.droppableId];
+  
+      if (startColumn === endColumn) {
+        const newTasks = Array.from(startColumn.tasks);
+        newTasks.splice(source.index, 1);
+        newTasks.splice(destination.index, 0, startColumn.tasks[source.index]);
+  
+        const newColumn = {
+          ...startColumn,
+          tasks: newTasks,
+        };
+  
+        setColumns({
+          ...columns,
+          [newColumn.id]: newColumn,
+        });
+      } else {
+        const startTasks = Array.from(startColumn.tasks);
+        startTasks.splice(source.index, 1);
+        const newStartColumn = {
+          ...startColumn,
+          tasks: startTasks,
+        };
+  
+        const endTasks = Array.from(endColumn.tasks);
+        endTasks.splice(destination.index, 0, startColumn.tasks[source.index]);
+        const newEndColumn = {
+          ...endColumn,
+          tasks: endTasks,
+        };
+  
+        setColumns({
+          ...columns,
+          [newStartColumn.id]: newStartColumn,
+          [newEndColumn.id]: newEndColumn,
+        });
+      }
     };
   
-    const handleAddTask = () => {
-      if (!newTaskTitle || !newTaskColumnId) return;
-      setTasks((prevTasks) => [
-        ...prevTasks,
-        { id: prevTasks.length + 1, title: newTaskTitle, columnId: newTaskColumnId }
-      ]);
-      setNewTaskTitle('');
-      setNewTaskColumnId(1);
-    };
-  
-    const handleMoveTask = (taskId, direction) => {
-      setTasks((prevTasks) => {
-        const taskIndex = prevTasks.findIndex((task) => task.id === taskId);
-        const task = prevTasks[taskIndex];
-        const newColumnId = task.columnId + direction;
-        if (newColumnId < 1 || newColumnId > columns.length) return prevTasks;
-        const newTasks = [...prevTasks];
-        newTasks[taskIndex] = { ...task, columnId: newColumnId };
-        return newTasks;
-      });
-    };
   return (
     <Layout>
-        <div className="flex flex-col items-center p-4">
-      <h1 className="text-4xl mb-4">Kanban Board</h1>
-      <div className="flex mb-4">
-        <input
-          type="text"
-          placeholder="New column title"
-          value={newColumnTitle}
-          onChange={(e) => setNewColumnTitle(e.target.value)}
-          className="border rounded p-2 mr-2"
-        />
-        <button onClick={handleAddColumn} className="bg-green-500 text-white px-4 py-2 rounded">
-          Add Column
-        </button>
-      </div>
-      <div className="flex mb-4">
-        <input
-          type="text"
-          placeholder="New task title"
-          value={newTaskTitle}
-          onChange={(e) => setNewTaskTitle(e.target.value)}
-          className="border rounded p-2 mr-2"
-        />
-        <select
-          value={newTaskColumnId}
-          onChange={(e) => setNewTaskColumnId(Number(e.target.value))}
-          className="border rounded p-2 mr-2"
-        >
-          {columns.map((column) => (
-            <option key={column.id} value={column.id}>
-              {column.title}
-            </option>
-          ))}
-        </select>
-        <button onClick={handleAddTask} className="bg-green-500 text-white px-4 py-2 rounded">
-          Add Task
-        </button>
-      </div>
-      <div className="flex">
-        {columns.map((column) => (
-          <div key={column.id} className="w-64 p-2 border rounded mr-2">
-            <h2 className="text-xl font-bold mb-2">{column.title}</h2>
-            {tasks
-              .filter((task) => task.columnId === column.id)
-              .map((task) => (
-                <div key={task.id} className="p-2 border rounded mb-2">
-                  <p>{task.title}</p>
-                  <div className="flex justify-between">
-                    <button
-                      onClick={() => handleMoveTask(task.id, -1)}
-                      disabled={column.id === 1}
-                    >
-                      ←
-                    </button>
-                    <button
-                      onClick={() => handleMoveTask(task.id, 1)}
-                      disabled={column.id === columns.length}
-                    >
-                      →
-                    </button>
-                  </div>
+        <div className="container mx-auto mt-4">
+      <h1 className="text-2xl font-bold mb-4">Project Board</h1>
+      <DragDropContext onDragEnd={onDragEnd}>
+        <div className="flex justify-center">
+          {Object.values(columns).map((column) => (
+            <Droppable droppableId={column.id} key={column.id}>
+              {(provided) => (
+                <div
+                  {...provided.droppableProps}
+                  ref={provided.innerRef}
+                  className="border rounded p-4 m-2 w-64"
+                >
+                  <h2 className="text-lg font-semibold mb-2">{column.title}</h2>
+                  {column.tasks.map((task, index) => (
+                    <Draggable key={task.id} draggableId={task.id} index={index}>
+                      {(provided) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          {...provided.dragHandleProps}
+                          className="bg-white border rounded p-2 mt-2"
+                        >
+                          {task.content}
+                        </div>
+                      )}
+                    </Draggable>
+                  ))}
+                  {provided.placeholder}
                 </div>
-              ))}
-          </div>
-        ))}
-      </div>
+              )}
+            </Droppable>
+          ))}
+        </div>
+      </DragDropContext>
     </div>
     </Layout>
   );
